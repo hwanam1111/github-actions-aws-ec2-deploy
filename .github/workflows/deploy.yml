@@ -11,6 +11,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-20.04
+    env:
+      IMAGE_TAG: ${{ github.sha }}
     steps:
       - name: Checkout source code
         uses: actions/checkout@master
@@ -31,6 +33,19 @@ jobs:
 
       - name: Install Dependencies
         run: npm install
-        
+
       - name: Build Project
         run: npm run build
+
+      - name: AWS Configure
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_S3_DEPLOY_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_S3_DEPLOY_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: AWS S3 Upload
+        run: aws deploy push --application-name github-actions-ec2-code-deploy-example --description "deploy example" --s3-location s3://github-actions-code-deploy-example/deploy_$IMAGE_TAG.zip --source .
+
+      - name: Code Deploy
+        run: aws deploy create-deployment --application-name github-actions-ec2-code-deploy-example --deployment-config-name CodeDeployDefault.OneAtATime --deployment-group-name deploy-group-example --s3-location bucket=github-actions-code-deploy-example,bundleType=zip,key=deploy_$IMAGE_TAG.zip

@@ -10,7 +10,12 @@ export class AppController {
     return this.appService.getHello();
   }
 
-  @Get()
+  @Get('/green')
+  getHelloGreenDeploy(): string {
+    return 'Hello green deploy';
+  }
+
+  @Get('/blue')
   getHelloBlueDeploy(): string {
     return 'Hello blue deploy';
   }
